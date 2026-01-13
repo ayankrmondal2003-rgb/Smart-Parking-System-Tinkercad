@@ -1,39 +1,39 @@
 #include <LiquidCrystal.h>
 #include <Servo.h>
 
-/* ---------------- SERVO OBJECTS ---------------- */
+//SERVO OBJECTS
 Servo S1;   // Entry gate
 Servo S2;   // Exit gate
 
 #define OPEN_ANGLE  90
 #define CLOSE_ANGLE 0
 
-/* ---------------- LCD ---------------- */
+//LCD
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 
-/* ---------------- PIR (LCD CONTROL ONLY) ---------------- */
+//PIR (LCD CONTROL ONLY)
 #define LCD_PIR        A2   // PIR output
 #define LCD_BACKLIGHT  A3   // LCD pin 15 (LED+)
 
-/* ---------------- ENTRY / EXIT ULTRASONIC (3-PIN) ---------------- */
+//ENTRY / EXIT ULTRASONIC (3-PIN)
 #define ENTRY_US 6
 #define EXIT_US  13
 
-/* ---------------- SLOT ULTRASONIC (HC-SR04) ---------------- */
+//SLOT ULTRASONIC (HC-SR04)
 #define TRIG1 7
 #define ECHO1 8
 #define TRIG2 A0
 #define ECHO2 A1
 
-/* ---------------- SLOT LED INDICATORS ---------------- */
+//SLOT LED INDICATORS
 #define SLOT1_LED A4
 #define SLOT2_LED A5
 
-/* ---------------- DISTANCE THRESHOLDS ---------------- */
+//DISTANCE THRESHOLDS
 #define SLOT_THRESHOLD   40   // cm
 #define GATE_THRESHOLD   30   // cm
 
-/* ---------------- FUNCTIONS ---------------- */
+//FUNCTIONS
 
 // 3-pin ultrasonic (entry & exit)
 long read3PinUltrasonic(int pin) {
@@ -63,7 +63,7 @@ long read4PinUltrasonic(int trigPin, int echoPin) {
   return duration * 0.034 / 2;
 }
 
-/* ---------------- SETUP ---------------- */
+//SETUP
 void setup() {
 
   // Servos
@@ -100,10 +100,10 @@ void setup() {
   Serial.begin(9600);
 }
 
-/* ---------------- LOOP ---------------- */
+//LOOP
 void loop() {
 
-  /* ---------- LCD POWER CONTROL (PIR ONLY) ---------- */
+  //LCD POWER CONTROL (PIR ONLY)
   bool pirDetected = digitalRead(LCD_PIR);
 
   if (pirDetected) {
@@ -112,7 +112,7 @@ void loop() {
     digitalWrite(LCD_BACKLIGHT, LOW);    // LCD OFF
   }
 
-  /* ---------- SLOT DETECTION ---------- */
+  //SLOT DETECTION
   long slot1Dist = read4PinUltrasonic(TRIG1, ECHO1);
   long slot2Dist = read4PinUltrasonic(TRIG2, ECHO2);
 
@@ -130,7 +130,7 @@ void loop() {
     lcd.print("Slot 2 = A  ");
   }
 
-  /* ---------- SLOT LED CONTROL ---------- */
+  //SLOT LED CONTROL
   if (slot1Dist > 0 && slot1Dist < SLOT_THRESHOLD) {
     digitalWrite(SLOT1_LED, HIGH);   // Slot 1 occupied
   } else {
@@ -143,7 +143,7 @@ void loop() {
     digitalWrite(SLOT2_LED, LOW);    // Slot 2 empty
   }
 
-  /* ---------- ENTRY GATE (ULTRASONIC ONLY) ---------- */
+  //ENTRY GATE (ULTRASONIC ONLY)
   long entryDist = read3PinUltrasonic(ENTRY_US);
   if (entryDist > 0 && entryDist < GATE_THRESHOLD) {
     S1.write(OPEN_ANGLE);
@@ -151,15 +151,13 @@ void loop() {
     S1.write(CLOSE_ANGLE);
   }
 
-  /* ---------- EXIT GATE (ULTRASONIC ONLY) ---------- */
+  //EXIT GATE (ULTRASONIC ONLY)
   long exitDist = read3PinUltrasonic(EXIT_US);
   if (exitDist > 0 && exitDist < GATE_THRESHOLD) {
     S2.write(OPEN_ANGLE);
   } else {
     S2.write(CLOSE_ANGLE);
   }
-
-  /* ---------- DEBUG ---------- */
   Serial.print("PIR: "); Serial.print(pirDetected);
   Serial.print(" | Entry: "); Serial.print(entryDist);
   Serial.print(" | Exit: "); Serial.print(exitDist);
